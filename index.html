@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TON Garden - Grow & Earn</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Righteous&family=Quicksand:wght@400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        :root {
+            --forest-dark: #0d2818;
+            --forest-green: #1a4d2e;
+            --leaf-green: #4f9d69;
+            --lime-bright: #a3d55d;
+            --sun-gold: #ffd93d;
+            --earth-brown: #8b5a3c;
+            --sky-blue: #87ceeb;
+            --flower-pink: #ff6b9d;
+            --flower-purple: #9d4edd;
+        }
+        
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(to bottom, var(--sky-blue) 0%, var(--lime-bright) 100%);
+            color: var(--forest-dark);
+            overflow-x: hidden;
+            min-height: 100vh;
+            user-select: none;
+            position: relative;
+        }
+        
+        /* Animated sun */
+        .sun {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, var(--sun-gold) 0%, #ffed4e 50%, transparent 70%);
+            border-radius: 50%;
+            animation: sunPulse 4s ease-in-out infinite;
+            z-index: 0;
+            box-shadow: 0 0 50px rgba(255, 217, 61, 0.6);
+        }
+        
+        @keyframes sunPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        /* Floating clouds */
+        .cloud {
+            position: fixed;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 100px;
+            animation: cloudFloat 60s linear infinite;
+            z-index: 0;
+        }
+        
+        @keyframes cloudFloat {
+            from { transform: translateX(-200px); }
+            to { transform: translateX(calc(100vw + 200px)); }
+        }
+        
+        .cloud1 {
+            width: 100px;
+            height: 40px;
+            top: 80px;
+            animation-delay: 0s;
+        }
+        
+        .cloud2 {
+            width: 150px;
+            height: 50px;
+            top: 150px;
+            animation-delay: 20s;
+        }
+        
+        .cloud3 {
+            width: 80px;
+            height: 35px;
+            top: 120px;
+            animation-delay: 40s;
+        }
+        
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            animation: slideDown 0.6s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .title {
+            font-family: 'Righteous', cursive;
+            font-size: 2.8rem;
+            color: var(--forest-dark);
+            text-shadow: 
+                3px 3px 0 var(--lime-bright),
+                -1px -1px 0 var(--leaf-green),
+                2px 2px 10px rgba(255, 217, 61, 0.3);
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            color: var(--forest-green);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        /* Stats cards */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+            animation: fadeIn 0.8s ease-out 0.2s both;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 15px 10px;
+            text-align: center;
+            box-shadow: 
+                0 5px 15px rgba(0, 0, 0, 0.1),
+                inset 0 -3px 0 rgba(79, 157, 105, 0.3);
+            border: 3px solid var(--leaf-green);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--lime-bright), var(--leaf-green), var(--lime-bright));
+        }
+        
+        .stat-icon {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--forest-green);
+            margin-bottom: 3px;
+        }
+        
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--earth-brown);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        
+        /* Garden area */
+        .garden-container {
+            background: linear-gradient(to bottom, 
+                rgba(163, 213, 93, 0.3) 0%, 
+                rgba(79, 157, 105, 0.5) 50%,
+                var(--earth-brown) 100%);
+            border-radius: 30px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.2),
+                inset 0 -5px 20px rgba(139, 90, 60, 0.4);
+            border: 4px solid var(--forest-green);
+            min-height: 350px;
+        }
+        
+        .garden-title {
+            font-family: 'Righteous', cursive;
+            font-size: 1.5rem;
+            color: white;
+            text-align: center;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .garden-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .plot {
+            aspect-ratio: 1;
+            background: rgba(139, 90, 60, 0.7);
+            border-radius: 15px;
+            border: 3px solid var(--earth-brown);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .plot:hover:not(.growing) {
+            transform: scale(1.05);
+            border-color: var(--lime-bright);
+        }
+        
+        .plot.empty {
+            background: rgba(139, 90, 60, 0.5);
+        }
+        
+        .plot.growing {
+            background: linear-gradient(135deg, var(--forest-green) 0%, var(--leaf-green) 100%);
+            border-color: var(--lime-bright);
+        }
+        
+        .plot-icon {
+            font-size: 3rem;
+            margin-bottom: 5px;
+        }
+        
+        .plot-status {
+            font-size: 0.7rem;
+            color: white;
+            font-weight: 600;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        
+        .progress-bar {
+            width: 80%;
+            height: 6px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--lime-bright), var(--sun-gold));
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(255, 217, 61, 0.5);
+        }
+        
+        /* Action buttons */
+        .actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .action-btn {
+            background: linear-gradient(135deg, var(--leaf-green), var(--forest-green));
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 12px 20px;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 5px 15px rgba(0, 0, 0, 0.2),
+                inset 0 -2px 5px rgba(0, 0, 0, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .action-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .action-btn:active {
+            transform: translateY(0);
+        }
+        
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--sun-gold), #ffb700);
+            color: var(--forest-dark);
+        }
+        
+        .action-btn.harvest {
+            background: linear-gradient(135deg, var(--flower-pink), var(--flower-purple));
+        }
+        
+        /* Seeds shop */
+        .seeds-shop {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border: 3px solid var(--leaf-green);
+        }
+        
+        .shop-title {
+            font-family: 'Righteous', cursive;
+            font-size: 1.3rem;
+            color: var(--forest-green);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .seeds-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        
+        .seed-card {
+            background: white;
+            border-radius: 15px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .seed-card:hover:not(.locked) {
+            transform: translateY(-3px);
+            border-color: var(--lime-bright);
+            box-shadow: 0 5px 20px rgba(163, 213, 93, 0.4);
+        }
+        
+        .seed-card.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .seed-card.selected {
+            border-color: var(--sun-gold);
+            background: linear-gradient(135deg, #fffef0, white);
+        }
+        
+        .seed-icon {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .seed-name {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--forest-green);
+            margin-bottom: 3px;
+        }
+        
+        .seed-info {
+            font-size: 0.65rem;
+            color: var(--earth-brown);
+            margin-bottom: 5px;
+        }
+        
+        .seed-rarity {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .rarity-common {
+            background: #e0e0e0;
+            color: #666;
+        }
+        
+        .rarity-rare {
+            background: linear-gradient(135deg, #4fc3f7, #29b6f6);
+            color: white;
+        }
+        
+        .rarity-epic {
+            background: linear-gradient(135deg, var(--flower-purple), #7b2cbf);
+            color: white;
+        }
+        
+        .rarity-legendary {
+            background: linear-gradient(135deg, var(--sun-gold), #ff8800);
+            color: white;
+            animation: shimmer 2s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* Daily missions */
+        .missions {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border: 3px solid var(--flower-pink);
+        }
+        
+        .missions-title {
+            font-family: 'Righteous', cursive;
+            font-size: 1.3rem;
+            color: var(--flower-pink);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .mission-item {
+            background: white;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 2px solid #f0f0f0;
+            transition: all 0.3s ease;
+        }
+        
+        .mission-item:hover {
+            border-color: var(--flower-pink);
+            box-shadow: 0 3px 15px rgba(255, 107, 157, 0.2);
+        }
+        
+        .mission-item.completed {
+            background: linear-gradient(135deg, #d4f8d4, #e8f8e8);
+            border-color: var(--lime-bright);
+        }
+        
+        .mission-info {
+            flex: 1;
+        }
+        
+        .mission-desc {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--forest-dark);
+            margin-bottom: 3px;
+        }
+        
+        .mission-reward {
+            font-size: 0.75rem;
+            color: var(--flower-pink);
+            font-weight: 600;
+        }
+        
+        .mission-progress {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--leaf-green);
+        }
+        
+        /* Referral section */
+        .referral {
+            background: linear-gradient(135deg, var(--flower-purple), var(--flower-pink));
+            border-radius: 25px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 25px rgba(157, 78, 221, 0.3);
+            color: white;
+            text-align: center;
+        }
+        
+        .referral-title {
+            font-family: 'Righteous', cursive;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .referral-bonus {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 10px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .referral-desc {
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+        
+        .referral-btn {
+            background: white;
+            color: var(--flower-purple);
+            border: none;
+            border-radius: 15px;
+            padding: 15px 30px;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .referral-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .referral-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .referral-stat {
+            text-align: center;
+        }
+        
+        .referral-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+        
+        .referral-stat-label {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+        
+        /* Floating rewards animation */
+        .reward-float {
+            position: fixed;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--sun-gold);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            animation: floatReward 2s ease-out forwards;
+            z-index: 1000;
+        }
+        
+        @keyframes floatReward {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-150px) scale(1.5);
+            }
+        }
+        
+        /* Exchange section */
+        .exchange {
+            background: linear-gradient(135deg, var(--sun-gold), #ffb700);
+            border-radius: 25px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(255, 183, 0, 0.4);
+            color: var(--forest-dark);
+        }
+        
+        .exchange-title {
+            font-family: 'Righteous', cursive;
+            font-size: 1.6rem;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .exchange-rate {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .rate-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .rate-value {
+            color: var(--forest-green);
+        }
+        
+        .rate-icon {
+            font-size: 2rem;
+        }
+        
+        .rate-arrow {
+            color: var(--leaf-green);
+            font-size: 1.5rem;
+        }
+        
+        .rate-label {
+            font-size: 0.85rem;
+            color: var(--earth-brown);
+            font-weight: 600;
+        }
+        
+        .exchange-info {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .info-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .info-icon {
+            font-size: 1.2rem;
+        }
+        
+        .exchange-calculator {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .exchange-input {
+            width: 100%;
+            padding: 15px;
+            border: 3px solid var(--leaf-green);
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 15px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+        
+        .exchange-input:focus {
+            border-color: var(--sun-gold);
+        }
+        
+        .conversion-result {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--lime-bright), var(--leaf-green));
+            border-radius: 12px;
+        }
+        
+        .result-label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--forest-dark);
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        .result-value {
+            display: block;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .exchange-btn, .withdraw-btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 15px;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        
+        .exchange-btn {
+            background: linear-gradient(135deg, var(--leaf-green), var(--forest-green));
+            color: white;
+            box-shadow: 0 5px 20px rgba(79, 157, 105, 0.4);
+        }
+        
+        .exchange-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 25px rgba(79, 157, 105, 0.5);
+        }
+        
+        .withdraw-btn {
+            background: white;
+            color: var(--forest-green);
+            border: 3px solid var(--forest-green);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .withdraw-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            background: var(--forest-green);
+            color: white;
+        }
+        
+        .exchange-btn:disabled, .withdraw-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="sun"></div>
+    <div class="cloud cloud1"></div>
+    <div class="cloud cloud2"></div>
+    <div class="cloud cloud3"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1 class="title">🌱 TON GARDEN</h1>
+            <p class="subtitle">Plant • Grow • Earn</p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-icon">🪙</div>
+                <div class="stat-value" id="gcoinBalance">0</div>
+                <div class="stat-label">GCoins</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">💎</div>
+                <div class="stat-value" id="tonBalance">0</div>
+                <div class="stat-label">TON</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-value" id="referrals">0</div>
+                <div class="stat-label">Amis</div>
+            </div>
+        </div>
+        
+        <div class="garden-container">
+            <h2 class="garden-title">🪴 Mon Jardin</h2>
+            <div class="garden-grid" id="gardenGrid"></div>
+            <div class="actions">
+                <button class="action-btn primary" id="plantBtn">🌱 Planter</button>
+                <button class="action-btn harvest" id="harvestAllBtn">🌾 Tout Récolter</button>
+            </div>
+        </div>
+        
+        <div class="seeds-shop">
+            <h2 class="shop-title">🛒 Boutique de Graines</h2>
+            <div class="seeds-grid" id="seedsGrid"></div>
+        </div>
+        
+        <div class="missions">
+            <h2 class="missions-title">🎯 Missions Quotidiennes</h2>
+            <div id="missionsList"></div>
+        </div>
+        
+        <div class="referral">
+            <h2 class="referral-title">💎 Programme de Parrainage</h2>
+            <div class="referral-bonus">+20% À VIE</div>
+            <p class="referral-desc">Gagnez 20% des GCoins de vos amis pour toujours !<br>Vos amis reçoivent +10% de bonus permanent</p>
+            <button class="referral-btn" id="inviteBtn">👥 Inviter des Amis</button>
+            <div class="referral-stats">
+                <div class="referral-stat">
+                    <div class="referral-stat-value" id="totalEarned">0</div>
+                    <div class="referral-stat-label">GCoins Gagnés</div>
+                </div>
+                <div class="referral-stat">
+                    <div class="referral-stat-value" id="passiveIncome">0</div>
+                    <div class="referral-stat-label">Revenu Passif/h</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="exchange">
+            <h2 class="exchange-title">💱 Convertir en TON</h2>
+            <div class="exchange-rate">
+                <div class="rate-display">
+                    <span class="rate-value">10,000</span>
+                    <span class="rate-icon">🪙</span>
+                    <span class="rate-arrow">→</span>
+                    <span class="rate-value">1</span>
+                    <span class="rate-icon">💎</span>
+                </div>
+                <div class="rate-label">Taux de conversion actuel</div>
+            </div>
+            
+            <div class="exchange-info">
+                <div class="info-item">
+                    <span class="info-icon">✅</span>
+                    <span>Conversion minimum: 50,000 GCoins</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-icon">⚡</span>
+                    <span>Instantané et sans frais</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-icon">🔒</span>
+                    <span>Retrait minimum: 5 TON</span>
+                </div>
+            </div>
+            
+            <div class="exchange-calculator">
+                <input type="number" id="gcoinInput" class="exchange-input" placeholder="Montant en GCoins" min="50000" step="1000">
+                <div class="conversion-result">
+                    <span class="result-label">Vous recevrez:</span>
+                    <span class="result-value" id="tonOutput">0 TON</span>
+                </div>
+            </div>
+            
+            <button class="exchange-btn" id="convertBtn">🔄 Convertir en TON</button>
+            <button class="withdraw-btn" id="withdrawBtn">💸 Retirer vers Wallet</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Telegram WebApp
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+        
+        // Game data
+        const SEEDS = [
+            { id: 1, name: 'Carotte', icon: '🥕', rarity: 'common', growTime: 30, reward: 10, cost: 0 },
+            { id: 2, name: 'Tomate', icon: '🍅', rarity: 'common', growTime: 60, reward: 30, cost: 50 },
+            { id: 3, name: 'Pastèque', icon: '🍉', rarity: 'rare', growTime: 120, reward: 100, cost: 200 },
+            { id: 4, name: 'Or Vert', icon: '💚', rarity: 'epic', growTime: 300, reward: 500, cost: 1000 },
+            { id: 5, name: 'Diamant', icon: '💎', rarity: 'legendary', growTime: 600, reward: 2000, cost: 5000 }
+        ];
+        
+        const MISSIONS = [
+            { id: 1, desc: 'Plante 5 graines', target: 5, reward: 100, type: 'plant' },
+            { id: 2, desc: 'Récolte 10 plantes', target: 10, reward: 200, type: 'harvest' },
+            { id: 3, desc: 'Invite 3 amis', target: 3, reward: 1000, type: 'referral' }
+        ];
+        
+        const GCOIN_TO_TON_RATE = 10000; // 10,000 GCoins = 1 TON
+        const MIN_CONVERSION = 50000; // Minimum 50,000 GCoins to convert
+        const MIN_WITHDRAWAL = 5; // Minimum 5 TON to withdraw
+        
+        // Load game state
+        let gameState = {
+            gcoinBalance: parseFloat(localStorage.getItem('gcoinBalance')) || 0,
+            tonBalance: parseFloat(localStorage.getItem('tonBalance')) || 0,
+            totalHarvests: parseInt(localStorage.getItem('totalHarvests')) || 0,
+            referrals: parseInt(localStorage.getItem('referrals')) || 0,
+            selectedSeed: 1,
+            plots: JSON.parse(localStorage.getItem('plots')) || Array(9).fill(null),
+            dailyStats: JSON.parse(localStorage.getItem('dailyStats')) || { planted: 0, harvested: 0 }
+        };
+        
+        // Update UI
+        function updateStats() {
+            document.getElementById('gcoinBalance').textContent = Math.floor(gameState.gcoinBalance).toLocaleString();
+            document.getElementById('tonBalance').textContent = gameState.tonBalance.toFixed(2);
+            document.getElementById('referrals').textContent = gameState.referrals;
+            document.getElementById('totalEarned').textContent = Math.floor(gameState.gcoinBalance * 0.2).toLocaleString();
+            document.getElementById('passiveIncome').textContent = Math.floor(gameState.referrals * 5);
+            
+            // Update conversion button state
+            updateConversionUI();
+            
+            saveGame();
+        }
+        
+        function saveGame() {
+            localStorage.setItem('gcoinBalance', gameState.gcoinBalance);
+            localStorage.setItem('tonBalance', gameState.tonBalance);
+            localStorage.setItem('totalHarvests', gameState.totalHarvests);
+            localStorage.setItem('referrals', gameState.referrals);
+            localStorage.setItem('plots', JSON.stringify(gameState.plots));
+            localStorage.setItem('dailyStats', JSON.stringify(gameState.dailyStats));
+        }
+        
+        // Render garden
+        function renderGarden() {
+            const grid = document.getElementById('gardenGrid');
+            grid.innerHTML = '';
+            
+            gameState.plots.forEach((plot, index) => {
+                const plotEl = document.createElement('div');
+                plotEl.className = 'plot';
+                
+                if (plot === null) {
+                    plotEl.classList.add('empty');
+                    plotEl.innerHTML = `
+                        <div class="plot-icon">🌱</div>
+                        <div class="plot-status">Vide</div>
+                    `;
+                    plotEl.onclick = () => plantSeed(index);
+                } else {
+                    plotEl.classList.add('growing');
+                    const seed = SEEDS.find(s => s.id === plot.seedId);
+                    const elapsed = Date.now() - plot.plantedAt;
+                    const progress = Math.min((elapsed / (seed.growTime * 1000)) * 100, 100);
+                    const isReady = progress >= 100;
+                    
+                    plotEl.innerHTML = `
+                        <div class="plot-icon">${isReady ? seed.icon : '🌱'}</div>
+                        <div class="plot-status">${isReady ? 'Prêt!' : Math.floor(progress) + '%'}</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${progress}%"></div>
+                        </div>
+                    `;
+                    
+                    if (isReady) {
+                        plotEl.onclick = () => harvest(index);
+                    }
+                }
+                
+                grid.appendChild(plotEl);
+            });
+        }
+        
+        // Plant seed
+        function plantSeed(plotIndex) {
+            const seed = SEEDS.find(s => s.id === gameState.selectedSeed);
+            
+            if (gameState.gcoinBalance < seed.cost) {
+                alert('Pas assez de GCoins!');
+                return;
+            }
+            
+            gameState.gcoinBalance -= seed.cost;
+            gameState.plots[plotIndex] = {
+                seedId: seed.id,
+                plantedAt: Date.now()
+            };
+            
+            gameState.dailyStats.planted++;
+            
+            updateStats();
+            renderGarden();
+            checkMissions();
+            
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+        }
+        
+        // Harvest
+        function harvest(plotIndex) {
+            const plot = gameState.plots[plotIndex];
+            const seed = SEEDS.find(s => s.id === plot.seedId);
+            
+            // Base reward + referral bonus
+            const referralBonus = gameState.referrals > 0 ? 1.1 : 1; // +10% if you have referrals
+            const reward = seed.reward * referralBonus;
+            
+            gameState.gcoinBalance += reward;
+            gameState.totalHarvests++;
+            gameState.dailyStats.harvested++;
+            gameState.plots[plotIndex] = null;
+            
+            // Show floating reward
+            showReward(reward);
+            
+            updateStats();
+            renderGarden();
+            checkMissions();
+            
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+        }
+        
+        // Harvest all
+        document.getElementById('harvestAllBtn').onclick = () => {
+            let harvested = 0;
+            gameState.plots.forEach((plot, index) => {
+                if (plot) {
+                    const seed = SEEDS.find(s => s.id === plot.seedId);
+                    const elapsed = Date.now() - plot.plantedAt;
+                    const progress = (elapsed / (seed.growTime * 1000)) * 100;
+                    
+                    if (progress >= 100) {
+                        harvest(index);
+                        harvested++;
+                    }
+                }
+            });
+            
+            if (harvested === 0) {
+                alert('Aucune plante prête à récolter!');
+            }
+        };
+        
+        // Show floating reward
+        function showReward(amount) {
+            const reward = document.createElement('div');
+            reward.className = 'reward-float';
+            reward.textContent = `+${Math.floor(amount)} 🪙`;
+            reward.style.left = '50%';
+            reward.style.top = '50%';
+            document.body.appendChild(reward);
+            
+            setTimeout(() => reward.remove(), 2000);
+        }
+        
+        // Render seeds shop
+        function renderSeeds() {
+            const grid = document.getElementById('seedsGrid');
+            grid.innerHTML = '';
+            
+            SEEDS.forEach(seed => {
+                const card = document.createElement('div');
+                card.className = 'seed-card';
+                if (seed.id === gameState.selectedSeed) card.classList.add('selected');
+                if (gameState.gcoinBalance < seed.cost) card.classList.add('locked');
+                
+                card.innerHTML = `
+                    <div class="seed-icon">${seed.icon}</div>
+                    <div class="seed-name">${seed.name}</div>
+                    <div class="seed-info">${seed.growTime}s • +${seed.reward} 🪙</div>
+                    <div class="seed-rarity rarity-${seed.rarity}">${seed.rarity}</div>
+                `;
+                
+                card.onclick = () => {
+                    gameState.selectedSeed = seed.id;
+                    renderSeeds();
+                };
+                
+                grid.appendChild(card);
+            });
+        }
+        
+        // Render missions
+        function renderMissions() {
+            const list = document.getElementById('missionsList');
+            list.innerHTML = '';
+            
+            MISSIONS.forEach(mission => {
+                const progress = getMissionProgress(mission);
+                const completed = progress >= mission.target;
+                
+                const item = document.createElement('div');
+                item.className = 'mission-item';
+                if (completed) item.classList.add('completed');
+                
+                item.innerHTML = `
+                    <div class="mission-info">
+                        <div class="mission-desc">${mission.desc}</div>
+                        <div class="mission-reward">🎁 Récompense: ${mission.reward} GCoins</div>
+                    </div>
+                    <div class="mission-progress">${progress}/${mission.target}</div>
+                `;
+                
+                list.appendChild(item);
+            });
+        }
+        
+        function getMissionProgress(mission) {
+            switch (mission.type) {
+                case 'plant': return gameState.dailyStats.planted;
+                case 'harvest': return gameState.dailyStats.harvested;
+                case 'referral': return gameState.referrals;
+                default: return 0;
+            }
+        }
+        
+        function checkMissions() {
+            MISSIONS.forEach(mission => {
+                const progress = getMissionProgress(mission);
+                const key = `mission_${mission.id}_claimed`;
+                
+                if (progress >= mission.target && !localStorage.getItem(key)) {
+                    gameState.gcoinBalance += mission.reward;
+                    localStorage.setItem(key, 'true');
+                    alert(`🎉 Mission complétée! +${mission.reward} GCoins`);
+                    updateStats();
+                }
+            });
+            
+            renderMissions();
+        }
+        
+        // Invite button
+        document.getElementById('inviteBtn').onclick = () => {
+            const botUsername = 'YOUR_BOT_USERNAME'; // À remplacer
+            const referralLink = `https://t.me/${botUsername}?start=${tg.initDataUnsafe.user?.id || 'demo'}`;
+            const shareText = `🌱 Rejoins-moi sur TON Garden! Plante, récolte et gagne des GCoins!\n\n💰 Convertis tes GCoins en TON!\n✨ +10% de bonus permanent pour toi!`;
+            
+            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`);
+        };
+        
+        // Conversion calculator
+        const gcoinInput = document.getElementById('gcoinInput');
+        const tonOutput = document.getElementById('tonOutput');
+        
+        gcoinInput.addEventListener('input', () => {
+            const gcoinAmount = parseFloat(gcoinInput.value) || 0;
+            const tonAmount = gcoinAmount / GCOIN_TO_TON_RATE;
+            tonOutput.textContent = tonAmount.toFixed(4) + ' TON';
+        });
+        
+        // Update conversion UI
+        function updateConversionUI() {
+            const convertBtn = document.getElementById('convertBtn');
+            const withdrawBtn = document.getElementById('withdrawBtn');
+            
+            convertBtn.disabled = gameState.gcoinBalance < MIN_CONVERSION;
+            withdrawBtn.disabled = gameState.tonBalance < MIN_WITHDRAWAL;
+        }
+        
+        // Convert GCoins to TON
+        document.getElementById('convertBtn').onclick = () => {
+            const gcoinAmount = parseFloat(gcoinInput.value) || 0;
+            
+            if (gcoinAmount < MIN_CONVERSION) {
+                alert(`Minimum ${MIN_CONVERSION.toLocaleString()} GCoins requis pour convertir!`);
+                return;
+            }
+            
+            if (gcoinAmount > gameState.gcoinBalance) {
+                alert('Pas assez de GCoins!');
+                return;
+            }
+            
+            const tonAmount = gcoinAmount / GCOIN_TO_TON_RATE;
+            
+            if (confirm(`Convertir ${gcoinAmount.toLocaleString()} GCoins en ${tonAmount.toFixed(4)} TON?`)) {
+                gameState.gcoinBalance -= gcoinAmount;
+                gameState.tonBalance += tonAmount;
+                
+                gcoinInput.value = '';
+                tonOutput.textContent = '0 TON';
+                
+                updateStats();
+                
+                alert(`✅ Conversion réussie!\n+${tonAmount.toFixed(4)} TON ajoutés à votre balance`);
+                
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('success');
+                }
+            }
+        };
+        
+        // Withdraw TON
+        document.getElementById('withdrawBtn').onclick = () => {
+            if (gameState.tonBalance < MIN_WITHDRAWAL) {
+                alert(`Minimum ${MIN_WITHDRAWAL} TON requis pour retirer!`);
+                return;
+            }
+            
+            // In a real implementation, this would connect to TON wallet
+            const walletAddress = prompt('Entrez votre adresse TON wallet:');
+            
+            if (walletAddress && walletAddress.length > 10) {
+                alert(`🚀 Demande de retrait envoyée!\n\nMontant: ${gameState.tonBalance.toFixed(2)} TON\nWallet: ${walletAddress.substring(0, 10)}...\n\n⏳ Traitement dans 24-48h`);
+                
+                // In production, send this to backend
+                console.log({
+                    userId: tg.initDataUnsafe.user?.id,
+                    amount: gameState.tonBalance,
+                    wallet: walletAddress,
+                    timestamp: Date.now()
+                });
+                
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('success');
+                }
+            }
+        };
+        
+        // Update garden every second
+        setInterval(() => {
+            renderGarden();
+        }, 1000);
+        
+        // Initialize
+        updateStats();
+        renderGarden();
+        renderSeeds();
+        renderMissions();
+        
+        // Reset daily stats at midnight
+        const lastReset = localStorage.getItem('lastReset');
+        const today = new Date().toDateString();
+        if (lastReset !== today) {
+            gameState.dailyStats = { planted: 0, harvested: 0 };
+            localStorage.setItem('lastReset', today);
+            // Reset mission claims
+            MISSIONS.forEach(m => localStorage.removeItem(`mission_${m.id}_claimed`));
+        }
+    </script>
+</body>
+</html>
